@@ -81,21 +81,25 @@ function App() {
     setPassword("");
   };
 
-  const toggleDevice = async (id) => {
-    // Optimistički UI update (promeni odmah boju pre nego što server odgovori)
-    setDevices(devices.map(d => 
-      d.id === id ? { ...d, isOn: !d.isOn, isLocked: !d.isLocked, isOpen: !d.isOpen } : d
-    ));
+const toggleDevice = async (id, newValue = null) => {
+    // Ažuriraj lokalno odmah (da ne secka)
+    setDevices(devices.map(d => {
+      if (d.id === id) {
+        if (newValue !== null) return { ...d, value: newValue }; // Ako je slider
+        return { ...d, isOn: !d.isOn, isLocked: !d.isLocked, isOpen: !d.isOpen }; // Ako je klik
+      }
+      return d;
+    }));
 
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${API_URL}/api/devices/${id}/toggle`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Šaljemo i value ako postoji
+      await axios.post(`${API_URL}/api/devices/${id}/toggle`, 
+        { value: newValue }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
     } catch (err) {
-      console.error("Greška pri menjanju statusa");
-      // Vrati na staro ako pukne server
-      fetchDevices(localStorage.getItem("token"));
+      console.error("Greška", err);
     }
   };
 
@@ -209,26 +213,52 @@ function App() {
 
               <div className="devices-grid">
                 {devices.map(dev => {
+                  // Unutar devices.map((dev) => { ...
                   const isActive = dev.isOn || (dev.type === 'lock' && dev.isLocked) || (dev.type === 'garage' && dev.isOpen);
-                  
+
                   return (
                     <div 
                       key={dev.id} 
                       className={`glass-card device-card ${isActive ? 'active' : ''}`}
-                      onClick={() => toggleDevice(dev.id)}
+                      // Klik na samu karticu radi Toggle (samo ako nije slider u pitanju)
+                      onClick={(e) => {
+                        if (e.target.type !== 'range') toggleDevice(dev.id);
+                      }}
                     >
                       <div className="status-indicator"></div>
                       <div className="device-icon">{getIcon(dev)}</div>
-                      <div>
-                        <h4 style={{ margin: '0 0 5px 0' }}>{dev.name}</h4>
-                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
-                          {dev.type === 'temp' ? `${dev.value}°C` : 
-                           dev.type === 'lock' ? (dev.isLocked ? 'Zaključano' : 'Otključano') :
-                           isActive ? 'Uključeno' : 'Isključeno'}
-                        </span>
-                      </div>
+    
+                      <div style={{ width: '100%' }}>
+                        <h4 style={{ margin: '0 0 5px 0', fontSize: '1rem' }}>{dev.name}</h4>
+      
+                        {/* Ako je Termostat ili Svetlo, prikaži SLIDER */}
+                        {(dev.type === 'temp' || dev.type === 'light') && isActive ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <input 
+                              type="range" 
+                              min={dev.type === 'temp' ? 16 : 0} 
+                              max={dev.type === 'temp' ? 30 : 100}
+                              value={dev.value}
+                              onClick={(e) => e.stopPropagation()} // Da ne ugasi uređaj kad klikaš slider
+                              onChange={(e) => toggleDevice(dev.id, parseInt(e.target.value))}
+                              style={{ width: '100%', accentColor: dev.type === 'temp' ? '#ef4444' : '#f59e0b' }}
+                            />
+                          <span style={{ fontSize: '0.8rem', minWidth: '30px' }}>
+                        {dev.value}{dev.type === 'temp' ? '°C' : '%'}
+                      </span>
                     </div>
-                  )
+                  ) : (
+                    // Običan tekst za ostale
+                          <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                            {dev.type === 'temp' ? `${dev.value}°C (Isključeno)` : 
+                            dev.type === 'lock' ? (dev.isLocked ? 'Zaključano' : 'Otključano') :
+                          isActive ? 'Uključeno' : 'Isključeno'}
+                          </span>
+                          )}
+                        </div>
+                        </div>
+                      )
+                      // ... })
                 })}
               </div>
             </>
@@ -273,3 +303,8 @@ function App() {
 }
 
 export default App;
+
+
+
+
+//ddddddsss

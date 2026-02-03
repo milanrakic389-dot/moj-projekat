@@ -44,3 +44,13 @@ model UserRole {
 
   @@id([userId, roleId]) // Složeni primarni ključ (ne možeš imati duplikat isti user-ista rola)
 }
+
+model Device {
+  id        Int     @id @default(autoincrement())
+  name      String
+  type      String  // 'light', 'lock', 'temp', 'garage', 'music', 'blinds'
+  isOn      Boolean @default(false)
+  isLocked  Boolean @default(false)
+  isOpen    Boolean @default(false)
+  value     Int     @default(0) // Za temperaturu ili jačinu svetla
+}

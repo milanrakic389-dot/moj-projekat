@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 
 // --- MIDDLEWARE ---
 app.use(cors({
-  origin: ["http://localhost:5173", "https://tvoj-sajt.netlify.app"], // Dodaj svoj Netlify URL ovde
+  origin: ["http://localhost:5173", "https://moj-projekt-test.netlify.app"], // Dodaj svoj Netlify URL ovde
   credentials: true
 }));
 app.use(express.json());
@@ -76,27 +76,65 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// 2. GET DEVICES (Za Korisnike)
-app.get("/api/devices", authenticateToken, (req, res) => {
-  res.json(smartDevices);
-});
+// ... (importi ostaju isti)
 
-// 3. TOGGLE DEVICE (Pali/Gasi)
-app.post("/api/devices/:id/toggle", authenticateToken, (req, res) => {
-  const { id } = req.params;
-  const device = smartDevices.find(d => d.id === parseInt(id));
+// BRISANJE onog 'let smartDevices = [...]' - VIŠE NAM NE TREBA!
 
-  if (device) {
-    if (device.type === 'light' || device.type === 'music' || device.type === 'temp') device.isOn = !device.isOn;
-    if (device.type === 'lock') device.isLocked = !device.isLocked;
-    if (device.type === 'garage') device.isOpen = !device.isOpen;
-    
-    // Simuliramo broadcast (u pravoj app bi koristio WebSockets)
-    res.json({ message: "Success", device });
-  } else {
-    res.status(404).json({ error: "Uređaj nije nađen" });
+// ... (Auth middleware ostaje isti)
+
+// --- NOVE RUTE KOJE KORISTE BAZU ---
+
+// 1. LOGIN (Ostaje isti) - ne menjaj ga
+
+// 2. GET DEVICES (Iz baze)
+app.get("/api/devices", authenticateToken, async (req, res) => {
+  try {
+    const devices = await prisma.device.findMany({ orderBy: { id: 'asc' } });
+    res.json(devices);
+  } catch (err) {
+    res.status(500).json({ error: "Greška pri čitanju uređaja" });
   }
 });
+
+// 3. TOGGLE / UPDATE DEVICE
+app.post("/api/devices/:id/toggle", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { value } = req.body; // Hvatamo i novu vrednost (za slider)
+
+  try {
+    // Prvo nađi uređaj
+    const device = await prisma.device.findUnique({ where: { id: parseInt(id) } });
+
+    if (!device) return res.status(404).json({ error: "Nema uređaja" });
+
+    // Pripremi promene
+    let updates = {};
+
+    // Ako nam je stigao 'value' (npr. temperatura), samo ažuriraj to
+    if (value !== undefined) {
+      updates.value = value;
+    } else {
+      // Inače radi klasičan toggle (pali/gasi)
+      if (device.type === 'light' || device.type === 'music' || device.type === 'temp') updates.isOn = !device.isOn;
+      if (device.type === 'lock') updates.isLocked = !device.isLocked;
+      if (device.type === 'garage') updates.isOpen = !device.isOpen;
+    }
+
+    // Sačuvaj u bazu
+    const updatedDevice = await prisma.device.update({
+      where: { id: parseInt(id) },
+      data: updates
+    });
+
+    res.json({ message: "Success", device: updatedDevice });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Greška na serveru" });
+  }
+});
+
+// ... (Ostalo ostaje isto)
 
 // 4. ADMIN - LIST USERS
 app.get("/api/admin/users", authenticateToken, async (req, res) => {
