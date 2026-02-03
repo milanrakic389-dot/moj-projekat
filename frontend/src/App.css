@@ -162,6 +162,17 @@ body {
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  
+  /* --- NOVO: POPRAVKA ZA PLAVI OKVIR --- */
+  outline: none; /* Sklanja plavi kvadrat na klik */
+  -webkit-tap-highlight-color: transparent; /* Sklanja plavi blink na mobilnom */
+  user-select: none; /* Sprečava selektovanje teksta kad brzo klikćeš */
+  /* ------------------------------------- */
+}
+
+/* Dodatna sigurnost za fokus */
+.device-card:focus {
+  outline: none;
 }
 
 .device-card::before {
