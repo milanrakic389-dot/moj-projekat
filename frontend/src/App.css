@@ -219,6 +219,64 @@ body {
   box-shadow: 0 0 8px var(--neon-green);
 }
 
+/* --- CUSTOM RANGE SLIDER --- */
+input[type="range"] {
+  -webkit-appearance: none; /* Uklanja defaultni izgled */
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative; /* Bitno za z-index */
+  z-index: 10; /* Osigurava da je iznad svega */
+  height: 20px; /* Veća površina za hvatanje */
+}
+
+input[type="range"]:focus {
+  outline: none;
+}
+
+/* Stil za klizač (Thumb) - Webkit */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  margin-top: -7px; /* Centriranje */
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+  transition: transform 0.1s;
+}
+
+input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+
+/* Stil za traku (Track) - Webkit */
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+/* Firefox stilovi */
+input[type="range"]::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
 /* --- ADMIN TABLE --- */
 .admin-table {
   width: 100%;
