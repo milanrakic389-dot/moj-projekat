@@ -1,0 +1,46 @@
+// Ovo govori Prismi da koristi Javascript klijent i Postgres bazu
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- MODELI (TABELE) ---
+
+model User {
+  id            String    @id @default(uuid()) // UUID je sigurniji od običnog broja (1, 2, 3...)
+  email         String    @unique
+  password      String    // Ovde ćemo čuvati hešovanu lozinku
+  firstName     String?
+  lastName      String?
+  createdAt     DateTime  @default(now())
+  isActive      Boolean   @default(true)
+
+  // Relacija: Jedan korisnik može imati više uloga (preko vezne tabele)
+  roles         UserRole[]
+}
+
+model Role {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique // npr. 'admin', 'user'
+  description String?
+
+  // Relacija: Jedna uloga pripada mnogim korisnicima
+  users       UserRole[]
+}
+
+// Vezna tabela (Many-to-Many)
+model UserRole {
+  userId    String
+  roleId    Int
+  assignedAt DateTime @default(now())
+
+  // Povezivanje stranih ključeva
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId]) // Složeni primarni ključ (ne možeš imati duplikat isti user-ista rola)
+}

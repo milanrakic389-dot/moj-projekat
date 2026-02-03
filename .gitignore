@@ -1,0 +1,16 @@
+# Ignoriši sistemske fajlove
+.DS_Store
+Thumbs.db
+
+# Ignoriši biblioteke (preteške su za GitHub, one se instaliraju sa npm install)
+node_modules/
+*/node_modules/
+
+# Ignoriši environment varijable (OVO ČUVA TVOJE TAJNE)
+.env
+.env.production
+.env.local
+
+# Ignoriši build foldere
+dist/
+build/
