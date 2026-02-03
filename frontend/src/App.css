@@ -1,4 +1,8 @@
-/* --- GLOBAL RESET & FONTS --- */
+/* --- GLOBAL RESET & BOX SIZING (Ovo rešava problem prelivanja) --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 :root {
   --bg-dark: #0f172a;
   --glass-bg: rgba(30, 41, 59, 0.7);
@@ -162,15 +166,13 @@ body {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  
-  /* --- NOVO: POPRAVKA ZA PLAVI OKVIR --- */
-  outline: none; /* Sklanja plavi kvadrat na klik */
-  -webkit-tap-highlight-color: transparent; /* Sklanja plavi blink na mobilnom */
-  user-select: none; /* Sprečava selektovanje teksta kad brzo klikćeš */
-  /* ------------------------------------- */
+
+  /* --- POPRAVKA ZA PLAVI OKVIR I FOKUS --- */
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-/* Dodatna sigurnost za fokus */
 .device-card:focus {
   outline: none;
 }
